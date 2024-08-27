@@ -1,0 +1,10 @@
+﻿Feldname;Alias;Beschreibung
+FID;OBJECTID;Vom Programm verwaltet eindeutige Kennung jedes Objekts
+nummer;Nummer;Eindeutiger 5-stelliger Schlüssel, zusammengesetzt aus 3-stelligem Stadtteilschlüssel + 2-stelliger fortlaufende Nummerierung
+name;Name;Name des Stadtviertels
+name_lang;Langname;Ausgeschriebener Name des Stadtviertels (z.B. Attribut Name GE = Gewerbegebiet)
+nr_stteil;Stadtteil (Nr.);Schlüssel des übergeordneten Stadtteils
+stteil;Stadtteil;Name des übergeordneten Stadtteils
+nr_stbez;Stadtbezirk (Nr.);Schlüssel des übergeordneten Stadtbezirks
+stbezirk;Stadtbezirk;Name des übergeordneten Stadtbezirks
+flaeche;Fläche (qm);Fläche, berechnet im Geographischen Koordinatensystem WGS 1984
