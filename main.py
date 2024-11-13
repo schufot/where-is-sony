@@ -157,7 +157,7 @@ def main():
     
     # Create and save the map
     map_obj = create_interactive_map('/home/thea/Dokumente/GitHub/where-is-sony/cologne_shapefiles/bayenthal.osm')
-    map_obj.save('cologne_bayenthal_interactive.html')
+    map_obj.save('cologne_interactive.html')
 
 if __name__ == "__main__":
     main()
