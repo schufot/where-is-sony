@@ -35,32 +35,52 @@ def add_point(latitude, longitude, description, image_path):
     conn.commit()
     conn.close()
 
+def delete_point(point_id):
+    """Delete a point and its associated image"""
+    conn = sqlite3.connect('map_points.db')
+    c = conn.cursor()
+    
+    # First get the image path
+    c.execute('SELECT image_path FROM points WHERE id = ?', (point_id,))
+    result = c.fetchone()
+    
+    if result:
+        image_path = result[0]
+        
+        # Delete from database
+        c.execute('DELETE FROM points WHERE id = ?', (point_id,))
+        conn.commit()
+        
+        # Delete associated image file
+        if os.path.exists(image_path):
+            os.remove(image_path)
+            print(f"Point {point_id} and its image were deleted successfully!")
+        else:
+            print(f"Point {point_id} was deleted, but image file was not found.")
+    else:
+        print(f"No point found with ID {point_id}")
+    
+    conn.close()
+
 def add_new_point():
     """Interactive function to add a new point to the database"""
-    print("Add a new point to the map")
+    print("\nAdd a new point to the map")
     print("--------------------------")
     
     try:
-        # Get point information
         latitude = float(input("Enter latitude: "))
         longitude = float(input("Enter longitude: "))
         description = input("Enter description (max 50 chars): ")[:50]
         
-        # Handle image
         while True:
             image_path = input("Enter path to image file: ")
             if os.path.exists(image_path):
-                # Create images directory if it doesn't exist
                 Path("images").mkdir(exist_ok=True)
-                
-                # Copy image to images directory with a unique name
                 file_extension = Path(image_path).suffix
                 new_filename = f"point_{latitude}_{longitude}{file_extension}"
                 new_path = os.path.join("images", new_filename)
                 
                 shutil.copy2(image_path, new_path)
-                
-                # Add to database
                 add_point(latitude, longitude, description, new_path)
                 print("Point added successfully!")
                 break
@@ -69,7 +89,6 @@ def add_new_point():
                 
     except Exception as e:
         print(f"Error adding point: {e}")
-        # Clean up image if database insert failed
         if 'new_path' in locals() and os.path.exists(new_path):
             os.remove(new_path)
 
@@ -80,6 +99,10 @@ def list_all_points():
     
     c.execute('SELECT * FROM points')
     points = c.fetchall()
+    
+    if not points:
+        print("\nNo points found in database.")
+        return
     
     print("\nAll Points")
     print("-----------")
@@ -93,23 +116,51 @@ def list_all_points():
     
     conn.close()
 
+def delete_point_interactive():
+    """Interactive function to delete a point"""
+    print("\nDelete a point")
+    print("-------------")
+    
+    # First show all points
+    list_all_points()
+    
+    try:
+        point_id = int(input("\nEnter the ID of the point to delete (or 0 to cancel): "))
+        if point_id == 0:
+            print("Deletion cancelled.")
+            return
+            
+        # Confirm deletion
+        confirm = input(f"Are you sure you want to delete point {point_id}? (yes/no): ")
+        if confirm.lower() == 'yes':
+            delete_point(point_id)
+        else:
+            print("Deletion cancelled.")
+            
+    except ValueError:
+        print("Please enter a valid number.")
+    except Exception as e:
+        print(f"Error deleting point: {e}")
+
 def main():
-    # Setup database when script starts
     setup_database()
     
     while True:
         print("\nPoint Manager")
         print("1. Add new point")
         print("2. List all points")
-        print("3. Exit")
+        print("3. Delete a point")
+        print("4. Exit")
         
-        choice = input("Choose an option: ")
+        choice = input("\nChoose an option: ")
         
         if choice == "1":
             add_new_point()
         elif choice == "2":
             list_all_points()
         elif choice == "3":
+            delete_point_interactive()
+        elif choice == "4":
             break
         else:
             print("Invalid choice. Please try again.")
