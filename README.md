@@ -1,6 +1,6 @@
 # Where is SONY?
 
-An overview of "SONY" tags in Cologne.
+An overview of "SONY" tags in Cologne. I do not make them, I just take pictures of them.
 
 ## Technologies Used
 
@@ -8,6 +8,10 @@ An overview of "SONY" tags in Cologne.
 - [Folium](https://python-visualization.github.io/folium/latest/)
 - [GeoPandas](https://geopandas.org/en/stable/index.html)
 - [SQLite](https://www.sqlite.org/)
+
+## Screenshots
+
+![where-is-sony-screenshot](https://github.com/user-attachments/assets/4ef0d34d-0148-4b4e-a7fb-b4f08f529ce3)
 
 ## Add a new point
 
