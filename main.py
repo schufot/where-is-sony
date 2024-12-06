@@ -76,10 +76,25 @@ def create_interactive_map(osm_file_path):
     
     # Create base map
     m = folium.Map(
-        location=[center_lat, center_lon],
-        zoom_start=15,
-        prefer_canvas=True
+        location=[50.9333, 6.9500],  # Cologne's coordinates
+        zoom_start=12,
+        prefer_canvas=True,
+        min_zoom=10,  # Prevent zooming out too far
+        max_zoom=18  # Prevent zooming in too close
     )
+
+    # Add Cologne city boundary
+    city_boundary = ox.geocode_to_gdf('Cologne, Germany')
+    folium.GeoJson(
+        city_boundary,
+        name='City Boundary',
+        style_function=lambda x: {
+            'fillColor': 'transparent',
+            'color': 'blue',
+            'weight': 3,
+            'dashArray': '5, 5'
+        }
+    ).add_to(m)
     
     # Add buildings
     if not buildings.empty:
@@ -149,10 +164,10 @@ def create_interactive_map(osm_file_path):
     return m
 
 def main():
-    # Setup database if it doesn't exist
+
     setup_database()
     
-    # Example of adding a point (you would typically do this separately)
+    # Example of adding a point
     # add_point(50.9333, 6.9500, "Test point in Cologne", "path/to/image.jpg")
     
     # Create and save the map
