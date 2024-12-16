@@ -171,7 +171,7 @@ def main():
     # add_point(50.9333, 6.9500, "Test point in Cologne", "path/to/image.jpg")
     
     # Create and save the map
-    map_obj = create_interactive_map('/home/thea/Dokumente/GitHub/where-is-sony/cologne_shapefiles/bayenthal.osm')
+    map_obj = create_interactive_map('/home/thea/Dokumente/github/where-is-sony/cologne_shapefiles/bayenthal.osm')
     map_obj.save('cologne_interactive.html')
 
 if __name__ == "__main__":
