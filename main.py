@@ -70,33 +70,106 @@ def create_interactive_map(osm_file_path):
     green_areas = green_areas.to_crs(epsg=4326)
     water_bodies = water_bodies.to_crs(epsg=4326)
     
-    # Calculate center point for initial map view
-    center_lat = edges.unary_union.centroid.y
-    center_lon = edges.unary_union.centroid.x
-    
     # Create base map
     m = folium.Map(
         location=[50.9333, 6.9500],  # Cologne's coordinates
         zoom_start=12,
         prefer_canvas=True,
-        min_zoom=10,  # Prevent zooming out too far
-        max_zoom=18  # Prevent zooming in too close
+        min_zoom=10,
+        max_zoom=18
     )
-
-    # Add Cologne city boundary
-    city_boundary = ox.geocode_to_gdf('Cologne, Germany')
-    folium.GeoJson(
-        city_boundary,
-        name='City Boundary',
-        style_function=lambda x: {
-            'fillColor': 'transparent',
-            'color': 'blue',
-            'weight': 3,
-            'dashArray': '5, 5'
-        }
-    ).add_to(m)
     
-    # Add buildings
+    # Add custom CSS and JavaScript for fullscreen functionality
+    custom_css = """
+        <style>
+            .fullscreen-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.9);
+                z-index: 9999;
+                justify-content: center;
+                align-items: center;
+                cursor: pointer;
+            }
+            .fullscreen-image {
+                max-width: 90%;
+                max-height: 90%;
+                object-fit: contain;
+            }
+            .popup-image {
+                cursor: pointer;
+                transition: transform 0.2s;
+            }
+            .popup-image:hover {
+                transform: scale(1.05);
+            }
+            .close-button {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                color: white;
+                font-size: 30px;
+                cursor: pointer;
+                background: none;
+                border: none;
+                padding: 10px;
+            }
+        </style>
+    """
+    
+    custom_js = """
+        <script>
+        function showFullscreen(imgSrc) {
+            // Create overlay if it doesn't exist
+            if (!document.getElementById('fullscreen-overlay')) {
+                const overlay = document.createElement('div');
+                overlay.id = 'fullscreen-overlay';
+                overlay.className = 'fullscreen-overlay';
+                
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'close-button';
+                closeBtn.innerHTML = '×';
+                closeBtn.onclick = hideFullscreen;
+                
+                const img = document.createElement('img');
+                img.className = 'fullscreen-image';
+                
+                overlay.appendChild(closeBtn);
+                overlay.appendChild(img);
+                document.body.appendChild(overlay);
+                
+                overlay.onclick = function(e) {
+                    if (e.target === overlay) {
+                        hideFullscreen();
+                    }
+                };
+            }
+            
+            // Update and show overlay
+            const overlay = document.getElementById('fullscreen-overlay');
+            const fullscreenImg = overlay.querySelector('.fullscreen-image');
+            fullscreenImg.src = imgSrc;
+            overlay.style.display = 'flex';
+        }
+        
+        function hideFullscreen() {
+            const overlay = document.getElementById('fullscreen-overlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+        }
+        </script>
+    """
+    
+    # Add custom CSS and JavaScript to the map
+    m.get_root().header.add_child(folium.Element(custom_css))
+    m.get_root().header.add_child(folium.Element(custom_js))
+    
+    # Add all the map layers (buildings, green areas, water bodies)
     if not buildings.empty:
         folium.GeoJson(
             buildings,
@@ -110,7 +183,6 @@ def create_interactive_map(osm_file_path):
             show=False
         ).add_to(m)
     
-    # Add green areas
     if not green_areas.empty:
         folium.GeoJson(
             green_areas,
@@ -123,7 +195,6 @@ def create_interactive_map(osm_file_path):
             }
         ).add_to(m)
     
-    # Add water bodies
     if not water_bodies.empty:
         folium.GeoJson(
             water_bodies,
@@ -136,17 +207,23 @@ def create_interactive_map(osm_file_path):
             }
         ).add_to(m)
     
-   
     # Add points from database with popups
     points = get_all_points()
     for point in points:
         id, lat, lon, description, image_path, created_at = point
         
-        # Create HTML for popup
-        img_html = f'<img src="{image_path}" style="width:200px;"><br>'
+        # Create HTML for popup with clickable image
+        img_html = f'''
+            <img src="{image_path}" 
+                 class="popup-image" 
+                 style="width:200px;" 
+                 onclick="showFullscreen('{image_path}')"
+                 title="Click to view fullscreen">
+        '''
+        
         popup_html = f'''
             <div style="width:220px;">
-                {img_html}
+                {img_html}<br>
                 <p>{description}</p>
             </div>
         '''
