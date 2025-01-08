@@ -53,7 +53,7 @@ def get_all_points():
 
 def create_interactive_map(osm_file_path):
     """
-    Create an interactive map from OSM data with points from database
+    Create an interactive map from OSM data with points from database and administrative boundaries
     """
     # Load the data
     graph = ox.graph_from_xml(osm_file_path)
@@ -64,11 +64,23 @@ def create_interactive_map(osm_file_path):
     green_areas = ox.features_from_xml(osm_file_path, tags={'landuse': ['grass', 'park', 'forest']})
     water_bodies = ox.features_from_xml(osm_file_path, tags={'natural': 'water'})
     
+    # Load administrative boundaries
+    districts = ox.features_from_xml(osm_file_path, tags={
+        'admin_level': '9',  # Districts in Cologne
+        'boundary': 'administrative'
+    })
+    neighborhoods = ox.features_from_xml(osm_file_path, tags={
+        'admin_level': '10',  # Neighborhoods in Cologne
+        'boundary': 'administrative'
+    })
+    
     # Ensure all data is in WGS84 (EPSG:4326)
     edges = edges.to_crs(epsg=4326)
     buildings = buildings.to_crs(epsg=4326)
     green_areas = green_areas.to_crs(epsg=4326)
     water_bodies = water_bodies.to_crs(epsg=4326)
+    districts = districts.to_crs(epsg=4326)
+    neighborhoods = neighborhoods.to_crs(epsg=4326)
     
     # Create base map
     m = folium.Map(
@@ -169,6 +181,44 @@ def create_interactive_map(osm_file_path):
     m.get_root().header.add_child(folium.Element(custom_css))
     m.get_root().header.add_child(folium.Element(custom_js))
     
+    # Add district boundaries
+    if not districts.empty:
+        folium.GeoJson(
+            districts,
+            name='Districts',
+            style_function=lambda x: {
+                'fillColor': '#ffcdd2',
+                'color': '#e57373',
+                'weight': 2,
+                'fillOpacity': 0.1,
+                'dashArray': '5, 5'
+            },
+            tooltip=folium.GeoJsonTooltip(
+                fields=['name'],
+                aliases=['District'],
+                style=('background-color: white; color: #333333; font-family: arial; font-size: 12px; padding: 10px;')
+            )
+        ).add_to(m)
+    
+    # Add neighborhood boundaries
+    if not neighborhoods.empty:
+        folium.GeoJson(
+            neighborhoods,
+            name='Neighborhoods',
+            style_function=lambda x: {
+                'fillColor': '#c5cae9',
+                'color': '#7986cb',
+                'weight': 1,
+                'fillOpacity': 0.1,
+                'dashArray': '3, 3'
+            },
+            tooltip=folium.GeoJsonTooltip(
+                fields=['name'],
+                aliases=['Neighborhood'],
+                style=('background-color: white; color: #333333; font-family: arial; font-size: 12px; padding: 10px;')
+            )
+        ).add_to(m)
+    
     # Add all the map layers (buildings, green areas, water bodies)
     if not buildings.empty:
         folium.GeoJson(
@@ -241,12 +291,8 @@ def create_interactive_map(osm_file_path):
     return m
 
 def main():
-
     setup_database()
-    
-    # Example of adding a point
-    # add_point(50.9333, 6.9500, "Test point in Cologne", "path/to/image.jpg")
-    
+        
     # Create and save the map
     map_obj = create_interactive_map('/home/thea/Dokumente/github/where-is-sony/cologne_shapefiles/bayenthal.osm')
     map_obj.save('cologne_interactive.html')
