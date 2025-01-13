@@ -11,7 +11,9 @@ An overview of "SONY" tags in Cologne. I do not make them, I just take pictures 
 
 ## Screenshots
 
-![where-is-sony-screenshot](https://github.com/user-attachments/assets/4ef0d34d-0148-4b4e-a7fb-b4f08f529ce3)
+![where-is-sony-screenshot-1](https://github.com/user-attachments/assets/cb7b28a9-0acb-48d9-b77f-94de17065c36)
+![where-is-sony-screenshot-2](https://github.com/user-attachments/assets/66ff8a14-8264-4b7d-876c-6fbd22fb2778)
+![where-is-sony-screenshot-3](https://github.com/user-attachments/assets/2a263566-7280-4b3e-9e2e-5061430fa3d7)
 
 ## Add a new point
 
