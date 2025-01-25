@@ -15,6 +15,10 @@ An overview of "SONY" tags in Cologne. I do not make them, I just take pictures 
 ![where-is-sony-screenshot-2](https://github.com/user-attachments/assets/66ff8a14-8264-4b7d-876c-6fbd22fb2778)
 ![where-is-sony-screenshot-3](https://github.com/user-attachments/assets/2a263566-7280-4b3e-9e2e-5061430fa3d7)
 
+## Screencast
+
+https://github.com/user-attachments/assets/7c75c184-4f6c-4860-9cdc-fbed94f8101f
+
 ## Add a new point
 
 1. Get the coordinates:
