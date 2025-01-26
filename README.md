@@ -17,7 +17,7 @@ An overview of "SONY" tags in Cologne. I do not make them, I just take pictures 
 
 ## Screencast
 
-
+https://github.com/user-attachments/assets/0b40ca5e-5322-428e-a61d-61fb486e9503
 
 ## Add a new point
 
