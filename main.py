@@ -284,7 +284,6 @@ def create_interactive_map(osm_file_path):
             radius=3,
             color='red',
             fill=True,
-            fill_color='red',
             popup=folium.Popup(popup_html, max_width=250),
         ).add_to(m)
     
