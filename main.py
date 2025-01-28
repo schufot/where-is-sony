@@ -90,27 +90,6 @@ def create_interactive_map(osm_file_path):
         min_zoom=10,
         max_zoom=18
     )
-
-    # Add district boundaries
-    if not districts.empty:
-        district_layer = folium.GeoJson(
-            districts,
-            name='Districts',
-            style_function=lambda x: {
-                'fillColor': '#ffcdd2',
-                'color': '#e57373',
-                'weight': 2,
-                'fillOpacity': 0.1,
-                'dashArray': '5.5'
-            },
-            tooltip=folium.GeoJsonTooltip(
-                fields=['name'],
-                aliases=['District'],
-                style=('background-color: white; color: #333333; font-family: arial; font-size: 12px; padding: 10px;')
-            )
-        ).add_to(m)
-    else:
-        district_layer = None
     
     # Add custom CSS and JavaScript for fullscreen functionality
     custom_css = """
@@ -221,11 +200,11 @@ def create_interactive_map(osm_file_path):
             )
         ).add_to(m)
     
-    # Add neighborhood boundaries
-    if not neighborhoods.empty:
-        folium.GeoJson(
-            neighborhoods,
-            name='Neighborhoods',
+    # Add borough boundaries
+    if not boroughs.empty:
+        borough_layer = folium.GeoJson(
+            boroughs,
+            name='Boroughs',
             style_function=lambda x: {
                 'fillColor': '#c5cae9',
                 'color': '#7986cb',
@@ -235,7 +214,7 @@ def create_interactive_map(osm_file_path):
             },
             tooltip=folium.GeoJsonTooltip(
                 fields=['name'],
-                aliases=['Neighborhood'],
+                aliases=['Borough'],
                 style=('background-color: white; color: #333333; font-family: arial; font-size: 12px; padding: 10px;')
             )
         ).add_to(m)
