@@ -69,8 +69,8 @@ def create_interactive_map(osm_file_path):
         'admin_level': '9',  # Districts in Cologne
         'boundary': 'administrative'
     })
-    neighborhoods = ox.features_from_xml(osm_file_path, tags={
-        'admin_level': '10',  # Neighborhoods in Cologne
+    boroughs = ox.features_from_xml(osm_file_path, tags={
+        'admin_level': '6',  # Boroughs in Cologne
         'boundary': 'administrative'
     })
     
@@ -80,7 +80,7 @@ def create_interactive_map(osm_file_path):
     green_areas = green_areas.to_crs(epsg=4326)
     water_bodies = water_bodies.to_crs(epsg=4326)
     districts = districts.to_crs(epsg=4326)
-    neighborhoods = neighborhoods.to_crs(epsg=4326)
+    boroughs = boroughs.to_crs(epsg=4326)
     
     # Create base map
     m = folium.Map(
@@ -90,6 +90,27 @@ def create_interactive_map(osm_file_path):
         min_zoom=10,
         max_zoom=18
     )
+
+    # Add district boundaries
+    if not districts.empty:
+        district_layer = folium.GeoJson(
+            districts,
+            name='Districts',
+            style_function=lambda x: {
+                'fillColor': '#ffcdd2',
+                'color': '#e57373',
+                'weight': 2,
+                'fillOpacity': 0.1,
+                'dashArray': '5.5'
+            },
+            tooltip=folium.GeoJsonTooltip(
+                fields=['name'],
+                aliases=['District'],
+                style=('background-color: white; color: #333333; font-family: arial; font-size: 12px; padding: 10px;')
+            )
+        ).add_to(m)
+    else:
+        district_layer = None
     
     # Add custom CSS and JavaScript for fullscreen functionality
     custom_css = """
