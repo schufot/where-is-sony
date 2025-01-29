@@ -3,8 +3,6 @@ from pathlib import Path
 import shutil
 import os
 
-# TODO: Remove description
-
 def setup_database():
     """Create SQLite database and necessary tables"""
     conn = sqlite3.connect('map_points.db')
