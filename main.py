@@ -58,30 +58,10 @@ def create_interactive_map(osm_file_path):
     # Load the data
     graph = ox.graph_from_xml(osm_file_path)
     nodes, edges = ox.graph_to_gdfs(graph)
-    
-    # Load additional features
-    buildings = ox.features_from_xml(osm_file_path, tags={'building': True})
-    green_areas = ox.features_from_xml(osm_file_path, tags={'landuse': ['grass', 'park', 'forest']})
-    water_bodies = ox.features_from_xml(osm_file_path, tags={'natural': 'water'})
-    
-    # Load administrative boundaries
-    districts = ox.features_from_xml(osm_file_path, tags={
-        'admin_level': '9',  # Districts in Cologne
-        'boundary': 'administrative'
-    })
-    boroughs = ox.features_from_xml(osm_file_path, tags={
-        'admin_level': '6',  # Boroughs in Cologne
-        'boundary': 'administrative'
-    })
-    
+     
     # Ensure all data is in WGS84 (EPSG:4326)
     edges = edges.to_crs(epsg=4326)
-    buildings = buildings.to_crs(epsg=4326)
-    green_areas = green_areas.to_crs(epsg=4326)
-    water_bodies = water_bodies.to_crs(epsg=4326)
-    districts = districts.to_crs(epsg=4326)
-    boroughs = boroughs.to_crs(epsg=4326)
-    
+
     # Create base map
     m = folium.Map(
         location=[50.9333, 6.9500],  # Cologne's coordinates
@@ -180,82 +160,6 @@ def create_interactive_map(osm_file_path):
     # Add custom CSS and JavaScript to the map
     m.get_root().header.add_child(folium.Element(custom_css))
     m.get_root().header.add_child(folium.Element(custom_js))
-    
-    # Add district boundaries
-    if not districts.empty:
-        folium.GeoJson(
-            districts,
-            name='Districts',
-            style_function=lambda x: {
-                'fillColor': '#ffcdd2',
-                'color': '#e57373',
-                'weight': 2,
-                'fillOpacity': 0.1,
-                'dashArray': '5, 5'
-            },
-            tooltip=folium.GeoJsonTooltip(
-                fields=['name'],
-                aliases=['District'],
-                style=('background-color: white; color: #333333; font-family: arial; font-size: 12px; padding: 10px;')
-            )
-        ).add_to(m)
-    
-    # Add borough boundaries
-    if not boroughs.empty:
-        borough_layer = folium.GeoJson(
-            boroughs,
-            name='Boroughs',
-            style_function=lambda x: {
-                'fillColor': '#c5cae9',
-                'color': '#7986cb',
-                'weight': 1,
-                'fillOpacity': 0.1,
-                'dashArray': '3, 3'
-            },
-            tooltip=folium.GeoJsonTooltip(
-                fields=['name'],
-                aliases=['Borough'],
-                style=('background-color: white; color: #333333; font-family: arial; font-size: 12px; padding: 10px;')
-            )
-        ).add_to(m)
-    
-    # Add all the map layers (buildings, green areas, water bodies)
-    if not buildings.empty:
-        folium.GeoJson(
-            buildings,
-            name='Buildings',
-            style_function=lambda x: {
-                'fillColor': '#d9d0c9',
-                'color': '#beb7ae',
-                'weight': 1,
-                'fillOpacity': 0.7
-            },
-            show=False
-        ).add_to(m)
-    
-    if not green_areas.empty:
-        folium.GeoJson(
-            green_areas,
-            name='Green Areas',
-            style_function=lambda x: {
-                'fillColor': '#add19e',
-                'color': '#8fc07f',
-                'weight': 1,
-                'fillOpacity': 0.7
-            }
-        ).add_to(m)
-    
-    if not water_bodies.empty:
-        folium.GeoJson(
-            water_bodies,
-            name='Water',
-            style_function=lambda x: {
-                'fillColor': '#aad3df',
-                'color': '#7ab6d6',
-                'weight': 1,
-                'fillOpacity': 0.7
-            }
-        ).add_to(m)
     
     # Add points from database with popups
     points = get_all_points()
