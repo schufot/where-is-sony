@@ -65,7 +65,7 @@ def create_interactive_map(osm_file_path):
     # Create base map
     m = folium.Map(
         location=[50.9333, 6.9500],  # Cologne's coordinates
-        zoom_start=12,
+        zoom_start=13,
         prefer_canvas=True,
         min_zoom=10,
         max_zoom=18
