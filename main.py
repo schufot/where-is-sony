@@ -86,6 +86,24 @@ def create_interactive_map(osm_file_path):
         max_zoom=18
     )
     
+    # Get statistics
+    total_points, avg_lat, avg_lon = get_statistics()
+
+    # Create a custom DivIcon with the statistics
+    stats_html = f"""
+    <div style="background-color: white; padding: 10px; border-radius: 5px; font-size: 12px; 
+                position: absolute; top: 10px; right: 10px; z-index: 9999;">
+        <strong>Total Points: </strong>{total_points}<br>
+        <strong>Average Latitude: </strong>{avg_lat:.4f}<br>
+        <strong>Average Longitude: </strong>{avg_lon:.4f}
+    </div>
+    """
+    
+    # Add the statistics DivIcon to the map (this is just an invisible marker)
+    folium.Marker(
+        location=[50.9333, 6.9500],
+        icon=folium.DivIcon(html=stats_html)
+    ).add_to(m)
     
     # Add custom CSS and JavaScript for fullscreen functionality
     custom_css = """
