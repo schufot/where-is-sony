@@ -51,6 +51,21 @@ def get_all_points():
     conn.close()
     return points
 
+def get_statistics():
+    """Retrieve statistics from the database"""
+    conn = sqlite3.connect('map_points.db')
+    c = conn.cursor()
+    
+    c.execute('SELECT COUNT(*) FROM points')
+    total_points = c.fetchone()[0]
+    
+    c.execute('SELECT AVG(latitude), AVG(longitude) FROM points')
+    avg_lat, avg_lon = c.fetchone()
+    
+    conn.close()
+    
+    return total_points, avg_lat, avg_lon
+
 def create_interactive_map(osm_file_path):
     """
     Create an interactive map from OSM data with points from database and administrative boundaries
@@ -70,6 +85,7 @@ def create_interactive_map(osm_file_path):
         min_zoom=10,
         max_zoom=18
     )
+    
     
     # Add custom CSS and JavaScript for fullscreen functionality
     custom_css = """
