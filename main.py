@@ -6,6 +6,8 @@ import sqlite3
 import base64
 from pathlib import Path
 import os
+from shapely.geometry import box, Polygon
+import json
 
 # Database setup
 def setup_database():
@@ -51,40 +53,59 @@ def get_all_points():
     conn.close()
     return points
 
-def get_statistics():
-    """Retrieve statistics from the database"""
-    conn = sqlite3.connect('map_points.db')
-    c = conn.cursor()
-    
-    c.execute('SELECT COUNT(*) FROM points')
-    total_points = c.fetchone()[0]
-    
-    c.execute('SELECT AVG(latitude), AVG(longitude) FROM points')
-    avg_lat, avg_lon = c.fetchone()
-    
-    conn.close()
-    
-    return total_points, avg_lat, avg_lon
+def convert_esri_geojson_to_polygon(filepath):
+    """
+    Converts an ESRI-style GeoJSON with 'rings' into a standard GeoDataFrame
+    """
+    with open(filepath, "r", encoding="utf-8") as f:
+        data = json.load(f)
 
-def create_interactive_map(osm_file_path):
+    # Take the first feature's ring as the main polygon
+    rings = data["features"][0]["geometry"]["rings"]
+    polygon = Polygon(rings[0])
+
+    # Create a GeoDataFrame with EPSG:4326
+    gdf = gpd.GeoDataFrame(geometry=[polygon], crs="EPSG:4326")
+    return gdf
+
+def create_interactive_map(osm_file_path, boundary_geojson_path):
     """
-    Create an interactive map from OSM data with points from database and administrative boundaries
+    Create an interactive folium map showing only Cologne, masking the rest of the world.
     """
-    # Load the data
+    # Load and convert the ESRI-style GeoJSON
+    boundary = convert_esri_geojson_to_polygon(boundary_geojson_path)
+
+    # Create a bounding box of the world
+    world = gpd.GeoDataFrame(geometry=[box(-180, -90, 180, 90)], crs="EPSG:4326")
+
+    # Create a mask: World minus Cologne
+    mask = gpd.overlay(world, boundary, how="difference")
+
+    # Load OSM data and extract edges (optional for background)
     graph = ox.graph_from_xml(osm_file_path)
     nodes, edges = ox.graph_to_gdfs(graph)
-     
-    # Ensure all data is in WGS84 (EPSG:4326)
     edges = edges.to_crs(epsg=4326)
 
-    # Create base map
-    m = folium.Map(
-        location=[50.9333, 6.9500],  # Cologne's coordinates
-        zoom_start=13,
-        prefer_canvas=True,
-        min_zoom=10,
-        max_zoom=18
-    )
+    # Center the map on Cologne
+    cologne_center = [50.9333, 6.9500]
+    m = folium.Map(location=cologne_center, zoom_start=13, min_zoom=12, max_bounds=True)
+
+    # Set map bounds to the Cologne boundary
+    south, west, north, east = boundary.total_bounds
+    m.fit_bounds([[south, west], [north, east]])
+    m.options['maxBounds'] = [[south, west], [north, east]]
+
+    # Add the gray mask outside Cologne
+    folium.GeoJson(
+        mask,
+        name="Outside Cologne",
+        style_function=lambda x: {
+            'fillColor': 'gray',
+            'color': 'gray',
+            'fillOpacity': 0.7,
+            'weight': 0,
+        }
+    ).add_to(m)
      
     # Add custom CSS and JavaScript for fullscreen functionality
     custom_css = """
@@ -213,9 +234,10 @@ def create_interactive_map(osm_file_path):
 
 def main():
     setup_database()
-        
-    # Create and save the map
-    map_obj = create_interactive_map('/home/thea/Dokumente/github/where-is-sony/cologne_shapefiles/cologne.osm')
+    map_obj = create_interactive_map(
+        osm_file_path='data/cologne.osm',
+        boundary_geojson_path='data/cologne_boundary.json'
+    )
     map_obj.save('index.html')
 
 if __name__ == "__main__":
