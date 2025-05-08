@@ -234,8 +234,8 @@ def main():
     setup_database()
         
     # Create and save the map
-    map_obj = create_interactive_map('/home/thea/Dokumente/github/where-is-sony/cologne_shapefiles/bayenthal.osm')
-    map_obj.save('cologne_interactive.html')
+    map_obj = create_interactive_map('/home/thea/Dokumente/github/where-is-sony/cologne_shapefiles/cologne.osm')
+    map_obj.save('index.html')
 
 if __name__ == "__main__":
     main()
