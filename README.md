@@ -69,3 +69,7 @@ python main.py
 6. Open cologne_interactive.html in your web browser to see the result.
 
 The point should appear as a red marker on your map. When you click it, you'll see your image and description in a popup.
+
+## Sources
+
+- [Cologne boundaries](https://offenedaten-koeln.de/dataset/stadtgebiet-k%C3%B6ln/resource/6a24870c-7e7a-4f16-95e2-a110d50d6598)
