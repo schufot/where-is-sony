@@ -69,6 +69,7 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
     """
     print("DEBUG: Starting map creation...")
     
+    # Verify files exist
     if not os.path.exists(osm_file_path):
         print(f"ERROR: OSM file not found at {osm_file_path}")
         raise FileNotFoundError(f"OSM file not found: {osm_file_path}")
@@ -122,24 +123,86 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
     # Add the HTML element to the map
     m.get_root().html.add_child(folium.Element(coordinates_div_html))
     
-    
+    # Create custom JavaScript for handling clicks
+    click_script = """
+    <script>
+        // Function to handle map click events
+        function handleMapClick(e) {
+            // Format the coordinates with 6 decimal places
+            var lat = e.latlng.lat.toFixed(6);
+            var lng = e.latlng.lng.toFixed(6);
+            
+            // Get the coordinates display element
+            var coordBox = document.getElementById('coordinates-box');
+            var coordDisplay = document.getElementById('coordinates');
+            
+            // Update and show the coordinates box
+            if (coordDisplay && coordBox) {
+                coordDisplay.textContent = lat + ", " + lng;
+                coordBox.style.display = "block";
+                
+                // Copy to clipboard if available
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(lat + ", " + lng);
+                }
+            } else {
+                console.error("Coordinates display elements not found");
+            }
+        }
+        
+        // Wait for the map to be fully loaded
+        window.addEventListener('load', function() {
+            console.log("Window loaded, setting up click handler");
+            setTimeout(function() {
+                // Get the map object
+                var mapContainer = document.getElementsByClassName('folium-map')[0];
+                if (mapContainer && mapContainer._leaflet_id) {
+                    // Access the Leaflet map instance
+                    var leafletMap = window.L.Map.getMapById(mapContainer._leaflet_id);
+                    if (leafletMap) {
+                        console.log("Adding click handler to map");
+                        leafletMap.on('click', handleMapClick);
+                    } else {
+                        console.error("Could not get Leaflet map instance");
+                    }
+                } else {
+                    console.error("Map container not found or not initialized");
+                }
+            }, 1000); // Give the map a second to fully initialize
+        });
+    </script>
+    """
     
     # Add the script to the head of the document
     m.get_root().header.add_child(folium.Element(click_script))
     
     try:
         print(f"DEBUG: Loading OSM data from {osm_file_path}")
+        # Load OSM data - with error handling
         graph = ox.graph_from_xml(osm_file_path)
         nodes, edges = ox.graph_to_gdfs(graph)
         print(f"DEBUG: Loaded {len(edges)} edges from OSM")
-
+        
+        # Add streets to the map - can be commented out if causing performance issues
+        folium.GeoJson(
+            edges.to_json(),
+            name="Streets",
+            style_function=lambda x: {
+                'color': 'black',
+                'weight': 1,
+                'opacity': 0.7
+            }
+        ).add_to(m)
     except Exception as e:
         print(f"ERROR loading OSM data: {e}")
         print("Continuing without OSM data...")
-
+    
+    # Set map bounds to the Cologne boundary - CORRECTED ORDER
+    # Folium's fit_bounds expects [[south, west], [north, east]]
     print("DEBUG: Setting map bounds to [[south, west], [north, east]]")
     m.fit_bounds([[south, west], [north, east]])
     
+    # Add the Cologne boundary itself
     folium.GeoJson(
         boundary,
         name="Cologne Boundary",
@@ -150,6 +213,7 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
         }
     ).add_to(m)
     
+    # Create a world bounding box for the mask
     print("DEBUG: Creating mask overlay")
     world = gpd.GeoDataFrame(geometry=[box(-180, -90, 180, 90)], crs="EPSG:4326")
     
@@ -157,6 +221,7 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
         # Create a mask: World minus Cologne
         mask = gpd.overlay(world, boundary, how="difference")
         
+        # Add the gray mask outside Cologne - setting opacity much lower to see through it
         folium.GeoJson(
             mask,
             name="Outside Cologne",
@@ -171,6 +236,7 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
         print(f"ERROR creating mask overlay: {e}")
         print("Continuing without mask...")
     
+    # Add custom CSS and JavaScript for fullscreen functionality
     custom_css = """
         <style>
             .fullscreen-overlay {
@@ -287,6 +353,7 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
             </div>
         '''
         
+        # Changed from Marker to CircleMarker for small red circles
         folium.CircleMarker(
             location=[lat, lon],
             popup=folium.Popup(popup_html, max_width=250),
