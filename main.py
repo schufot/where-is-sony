@@ -9,64 +9,45 @@ import os
 from shapely.geometry import box, Polygon
 import json
 
-# Database setup
-def setup_database():
-    """Create SQLite database and necessary tables"""
-    conn = sqlite3.connect('map_points.db')
-    c = conn.cursor()
-    
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS points (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            latitude REAL NOT NULL,
-            longitude REAL NOT NULL,
-            description TEXT NOT NULL,
-            image_path TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    conn.commit()
-    conn.close()
-
-def add_point(latitude, longitude, description, image_path):
-    """Add a new point to the database"""
-    conn = sqlite3.connect('map_points.db')
-    c = conn.cursor()
-    
-    c.execute('''
-        INSERT INTO points (latitude, longitude, description, image_path)
-        VALUES (?, ?, ?, ?)
-    ''', (latitude, longitude, description, image_path))
-    
-    conn.commit()
-    conn.close()
-
-def get_all_points():
-    """Retrieve all points from the database"""
-    conn = sqlite3.connect('map_points.db')
-    c = conn.cursor()
-    
-    c.execute('SELECT * FROM points')
-    points = c.fetchall()
-    
-    conn.close()
-    return points
-
 def convert_esri_geojson_to_polygon(filepath):
     """
     Converts an ESRI-style GeoJSON with 'rings' into a standard GeoDataFrame
     """
-    with open(filepath, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
 
-    # Take the first feature's ring as the main polygon
-    rings = data["features"][0]["geometry"]["rings"]
-    polygon = Polygon(rings[0])
-
-    # Create a GeoDataFrame with EPSG:4326
-    gdf = gpd.GeoDataFrame(geometry=[polygon], crs="EPSG:4326")
-    return gdf
+        # Check if the expected structure exists
+        if not data.get("features") or len(data["features"]) == 0:
+            print(f"ERROR: GeoJSON file {filepath} has no features")
+            raise ValueError("Invalid GeoJSON: No features found")
+            
+        # Take the first feature's ring as the main polygon
+        rings = data["features"][0]["geometry"].get("rings")
+        if not rings or len(rings) == 0:
+            print(f"ERROR: GeoJSON feature has no rings at {filepath}")
+            raise ValueError("Invalid GeoJSON: No rings found in feature")
+            
+        # ESRI GeoJSON typically has longitude,latitude ordering
+        try:
+            polygon = Polygon(rings[0])
+            
+            # Create a GeoDataFrame with EPSG:4326
+            gdf = gpd.GeoDataFrame(geometry=[polygon], crs="EPSG:4326")
+            bounds = gdf.total_bounds
+            # Print bounds correctly labeled [west, south, east, north]
+            print(f"Successfully loaded boundary with bounds [west, south, east, north]: [{bounds[0]}, {bounds[1]}, {bounds[2]}, {bounds[3]}]")
+            return gdf
+        except Exception as e:
+            print(f"ERROR creating polygon: {e}")
+            raise
+            
+    except json.JSONDecodeError:
+        print(f"ERROR: {filepath} is not valid JSON")
+        raise
+    except Exception as e:
+        print(f"ERROR loading GeoJSON file {filepath}: {e}")
+        raise
 
 def create_interactive_map(osm_file_path, boundary_geojson_path):
     """
