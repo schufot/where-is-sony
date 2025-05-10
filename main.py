@@ -69,7 +69,6 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
     """
     print("DEBUG: Starting map creation...")
     
-    # Verify files exist
     if not os.path.exists(osm_file_path):
         print(f"ERROR: OSM file not found at {osm_file_path}")
         raise FileNotFoundError(f"OSM file not found: {osm_file_path}")
@@ -82,7 +81,6 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
     # Load and convert the ESRI-style GeoJSON
     boundary = convert_esri_geojson_to_polygon(boundary_geojson_path)
 
-    # Get the bounds of Cologne
     bounds = boundary.total_bounds
     # In GeoDataFrame total_bounds, the order is [xmin, ymin, xmax, ymax] 
     # which is [west, south, east, north]
@@ -120,10 +118,9 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
     </div>
     """
     
-    # Add the HTML element to the map
     m.get_root().html.add_child(folium.Element(coordinates_div_html))
     
-    # Create custom JavaScript for handling clicks
+    # JavaScript for handling clicks
     click_script = """
     <script>
         // Function to handle map click events
@@ -173,26 +170,14 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
     </script>
     """
     
-    # Add the script to the head of the document
     m.get_root().header.add_child(folium.Element(click_script))
     
     try:
         print(f"DEBUG: Loading OSM data from {osm_file_path}")
-        # Load OSM data - with error handling
         graph = ox.graph_from_xml(osm_file_path)
         nodes, edges = ox.graph_to_gdfs(graph)
         print(f"DEBUG: Loaded {len(edges)} edges from OSM")
         
-        # Add streets to the map - can be commented out if causing performance issues
-        folium.GeoJson(
-            edges.to_json(),
-            name="Streets",
-            style_function=lambda x: {
-                'color': 'black',
-                'weight': 1,
-                'opacity': 0.7
-            }
-        ).add_to(m)
     except Exception as e:
         print(f"ERROR loading OSM data: {e}")
         print("Continuing without OSM data...")
@@ -221,14 +206,14 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
         # Create a mask: World minus Cologne
         mask = gpd.overlay(world, boundary, how="difference")
         
-        # Add the gray mask outside Cologne - setting opacity much lower to see through it
+        # Add the gray mask outside Cologne
         folium.GeoJson(
             mask,
             name="Outside Cologne",
             style_function=lambda x: {
                 'fillColor': 'gray',
                 'color': 'gray',
-                'fillOpacity': 0.3,  # Lower opacity
+                'fillOpacity': 0.3,
                 'weight': 0,
             }
         ).add_to(m)
@@ -322,17 +307,14 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
         </script>
     """
     
-    # Add custom CSS and JavaScript to the map
     m.get_root().header.add_child(folium.Element(custom_css))
     m.get_root().header.add_child(folium.Element(custom_js))
     
-    # Add points from database with popups
     print("DEBUG: Adding points from database")
     points = get_all_points()
     for point in points:
         id, lat, lon, description, image_path, created_at = point
         
-        # Verify image exists
         if not os.path.exists(image_path):
             print(f"WARNING: Image not found at {image_path} for point {id}")
             img_html = f"<p>Image not found: {image_path}</p>"
@@ -353,7 +335,6 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
             </div>
         '''
         
-        # Changed from Marker to CircleMarker for small red circles
         folium.CircleMarker(
             location=[lat, lon],
             popup=folium.Popup(popup_html, max_width=250),
@@ -365,7 +346,6 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
             weight=1  # Border weight
         ).add_to(m)
     
-    # Add layer control
     folium.LayerControl().add_to(m)
     
     # Add Leaflet.js click handler via Folium's built-in method
@@ -399,3 +379,57 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
     
     print("DEBUG: Map creation complete")
     return m
+
+def main():
+    try:
+        print("Setting up database...")
+        # Create database if it doesn't exist
+        conn = sqlite3.connect('map_points.db')
+        c = conn.cursor()
+        
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS points (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                latitude REAL NOT NULL,
+                longitude REAL NOT NULL,
+                description TEXT NOT NULL,
+                image_path TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        conn.commit()
+        conn.close()
+
+        points = get_all_points()
+        if not points:
+            print("WARNING: No points in database. Map will have no markers.")
+            print("You can add points using point_manager.py")
+        
+        if not os.path.exists('data'):
+            print("ERROR: 'data' directory not found!")
+            os.makedirs('data', exist_ok=True)
+            print("Created 'data' directory - please place cologne.osm and cologne_boundary.json there")
+            return
+        
+        osm_path = 'data/cologne.osm'
+        boundary_path = 'data/cologne_boundary.json'
+        
+        print(f"Creating map with:\n  OSM: {osm_path}\n  Boundary: {boundary_path}")
+        map_obj = create_interactive_map(
+            osm_file_path=osm_path,
+            boundary_geojson_path=boundary_path
+        )
+
+        output_path = 'index.html'
+        print(f"Saving map to {output_path}")
+        map_obj.save(output_path)
+        print(f"Map saved successfully to {output_path}")
+        
+    except Exception as e:
+        print(f"ERROR in main function: {e}")
+        import traceback
+        traceback.print_exc()
+
+if __name__ == "__main__":
+    main()
