@@ -13,13 +13,15 @@ An overview of "SONY" tags in Cologne. I do not make them, I just take pictures 
 
 ## Screenshots
 
-![where-is-sony-screenshot-1](https://github.com/user-attachments/assets/40b6119f-7abe-455d-af4c-d4ba28f627dd)
-![where-is-sony-screenshot-2](https://github.com/user-attachments/assets/2f5d1d99-f7af-45c7-8483-02ec7c223987)
-![where-is-sony-screenshot-3](https://github.com/user-attachments/assets/1ad269d7-87c8-4e73-8df0-289ae589e40d)
+![where-is-sony-screenshot-1](https://github.com/user-attachments/assets/f85e7596-18e0-4ef9-9f4b-e826caa7f774)
+![where-is-sony-screenshot-2](https://github.com/user-attachments/assets/90e6138a-a854-4e02-99e0-79fe4ce194c5)
+![where-is-sony-screenshot-3](https://github.com/user-attachments/assets/5c6a43c7-0310-43ae-9736-cf97df6f3878)
+![where-is-sony-screenshot-4](https://github.com/user-attachments/assets/0ae8f671-b73e-43d9-a795-390ee79ac018)
+![where-is-sony-screenshot-5](https://github.com/user-attachments/assets/24cc25a0-16f1-4630-92bf-7a3016109155)
 
 ## Screencast
 
-https://github.com/user-attachments/assets/0b40ca5e-5322-428e-a61d-61fb486e9503
+https://github.com/user-attachments/assets/47b92b54-9aee-4e2b-9a9d-ffa086177dbf
 
 ## Add a new point
 
