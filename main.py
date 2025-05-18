@@ -193,7 +193,7 @@ def create_interactive_map(osm_file_path, boundary_geojson_path):
         name="Cologne Boundary",
         style_function=lambda x: {
             'fillColor': 'transparent',
-            'color': 'blue',
+            'color': 'grey',
             'weight': 2,
         }
     ).add_to(m)
